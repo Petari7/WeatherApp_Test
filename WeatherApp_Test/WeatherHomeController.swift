@@ -55,7 +55,7 @@ class WeatherHomeController: UIViewController, CLLocationManagerDelegate {
         return stackView
     }()
     
-    let searchButton:  UIButton = {
+    lazy var searchButton:  UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Ort/PLZ suchen", for: .normal)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
@@ -63,6 +63,7 @@ class WeatherHomeController: UIViewController, CLLocationManagerDelegate {
         button.setTitleColor(.white, for: .normal)
         let buttonImage = UIImage(named: "search")?.withRenderingMode(.alwaysTemplate)
         button.tintColor = .white
+        button.addTarget(self, action: #selector(handleSearchButton), for: .touchUpInside)
         button.setImage(buttonImage, for: .normal)
         return button
     }()
@@ -75,6 +76,7 @@ class WeatherHomeController: UIViewController, CLLocationManagerDelegate {
         button.layer.borderWidth = 1
         return button
     }()
+    
     let wetterLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 24)
@@ -125,32 +127,33 @@ fileprivate func setupViews() {
     stackView.autoSetDimension(.height, toSize: 90)
 }
 
-@objc func handleSearchTapped() {
+    @objc func handleSearchTapped() {
     sideMenuSetup(withBool: false)
     guard let sideMenuNavigationController = sideNavigationController else { return }
     self.present(sideMenuNavigationController, animated: true, completion: nil)
-}
-@objc func handleMenuOpened() {
+    }
+    
+    @objc func handleMenuOpened() {
     sideMenuSetup(withBool: true)
     guard let sideMenuNavigationController = sideNavigationController else { return }
     self.present(sideMenuNavigationController, animated: true, completion: nil)
-}
+    }
     
-func sideMenuSetup(withBool:Bool) {
-    let sideMenuVc = UIViewController()
-    let side = UIViewController()
-    sideMenuVc.view.backgroundColor = UIColor.black
-    side.view.backgroundColor = UIColor.red
-    sideNavigationController = .init(rootViewController: sideMenuVc)
+    func sideMenuSetup(withBool:Bool) {
+    let leftViewController = UIViewController()
+    leftViewController.view.backgroundColor = UIColor.black
+    leftViewController.view.backgroundColor = UIColor.red
+    sideNavigationController = .init(rootViewController: CitiesSearchTableTableViewController())
     sideNavigationController?.leftSide = withBool;
-    sideNavigationController?.menuWidth = self.view.bounds.width * 0.9
+    sideNavigationController?.menuWidth = self.view.bounds.width * 1
     SideMenuManager.default.addPanGestureToPresent(toView: view)
     SideMenuManager.default.addScreenEdgePanGesturesToPresent(toView: view, forMenu: .left)
-    SideMenuManager.default.addScreenEdgePanGesturesToPresent(toView: view, forMenu: .left)
+    SideMenuManager.default.addScreenEdgePanGesturesToPresent(toView: view, forMenu: .right)
     SideMenuManager.default.leftMenuNavigationController = sideNavigationController
     SideMenuManager.default.rightMenuNavigationController = sideNavigationController
-}
-@objc func handleRequestLocation() {
+    }
+    
+    @objc func handleRequestLocation() {
     guard let locationManager = self.locationManager else { return }
     locationManager.requestWhenInUseAuthorization()
     locationManager.startUpdatingLocation()
@@ -161,13 +164,22 @@ func sideMenuSetup(withBool:Bool) {
         self.showAlertWhenLocationDenied()
     default:
         ()
+        }
     }
-}
-func showAlertWhenLocationDenied() {
+    func showAlertWhenLocationDenied() {
     let alertViewController = UIAlertController(title: "Ortung deaktiviert.", message: "Um Ihren Standort ermitteln zu können, muss die GPS-Funktion aktiv sein.\n Um GPS zu aktivieren, öffnen Sie bitte Einstellungen > Datenschutz > Ortungsdienste.", preferredStyle: .alert)
     alertViewController.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
     self.present(alertViewController, animated: true, completion: nil)
-}
+    }
+    
+    @objc func handleSearchButton() {
+    sideMenuSetup(withBool: false)
+    guard let sideMenuNavigationController = sideNavigationController else { return }
+    sideMenuNavigationController.menuWidth = self.view.bounds.width * 1
+    self.present(sideMenuNavigationController, animated: true, completion: nil)
+    }
+ 
+    
 }
 
 
